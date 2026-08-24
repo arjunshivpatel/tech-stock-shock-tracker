@@ -1,15 +1,3 @@
-"""
-Daily price fetcher for stock-shock-tracker.
-
-Pulls the latest close for each tracked ticker and appends it to
-docs/data/prices.json. Designed to be run once a day (weekdays) via
-GitHub Actions, but safe to run manually/locally any time -- it only
-ever appends dates that aren't already in the file.
-
-Run from the repo root:
-    python scripts/fetch_prices.py
-"""
-
 import json
 import time
 from datetime import date, timedelta
@@ -35,9 +23,6 @@ def load_existing():
 
 
 def fetch_recent_prices(start_date):
-    """Download closes for all tickers from start_date to today.
-    Retries on failure since yfinance is known to be flaky on shared
-    CI runners (empty responses, rate limiting)."""
     end_date = date.today() + timedelta(days=1)  # yfinance end is exclusive
     last_error = None
     for attempt in range(1, MAX_RETRIES + 1):
