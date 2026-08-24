@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Shock Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #1B1E24;
+    --panel: #22262E;
+    --panel-border: #2E333D;
+    --text: #EDEBE5;
+    --text-muted: #8B909B;
+    --amber: #D9A441;
+
+    --c-amd: #E8734A;
+    --c-msft: #4FA8E0;
+    --c-sony: #6FCF97;
+    --c-nvda: #B98FE0;
+    --c-ntdoy: #E0577C;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+
+  a{ color: var(--amber); }
+  a:focus-visible, button:focus-visible{
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+
+  /* --- Ticker tape (signature element) --- */
+  .ticker-tape{
+    background: #14161B;
+    border-bottom: 1px solid var(--panel-border);
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 10px 0;
+  }
+  .ticker-tape__track{
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    animation: scroll-left 32s linear infinite;
+  }
+  .ticker-tape__item{
+    display: inline-block;
+    padding: 0 1.75rem;
+    color: var(--text-muted);
+  }
+  .ticker-tape__item strong{
+    color: var(--text);
+    font-weight: 700;
+    margin-right: 0.5em;
+  }
+  .ticker-tape__up{ color: var(--c-sony); }
+  .ticker-tape__down{ color: var(--c-ntdoy); }
+
+  @keyframes scroll-left{
+    from{ transform: translateX(0); }
+    to{ transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-tape__track{ animation: none; }
+    .ticker-tape{ overflow-x: auto; }
+  }
+
+  /* --- Layout --- */
+  main{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin: 0 0 0.6rem;
+  }
+
+  h1{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .subhead{
+    color: var(--text-muted);
+    max-width: 60ch;
+    line-height: 1.6;
+    margin: 0 0 2.5rem;
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .panel h2{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 1.25rem;
+  }
+
+  .chart-wrap{
+    position: relative;
+    height: 420px;
+  }
+
+  .legend{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+
+  .legend button{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .legend button:hover{ border-color: var(--text-muted); }
+  .legend button.is-off{ color: #565B65; }
+  .legend__dot{
+    width: 9px; height: 9px; border-radius: 50%; display: inline-block;
+  }
+
+  .status{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .events-list{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .events-list li{
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .events-list li:last-child{ border-bottom: none; }
+  .events-list time{
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--amber);
+    margin-bottom: 0.25rem;
+  }
+  .events-list .headline{ font-weight: 600; }
+  .events-list .note{ color: var(--text-muted); font-size: 0.9rem; margin-top: 0.2rem; }
+
+  footer{
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .empty-state{
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 2rem 0;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="ticker-tape" aria-label="Latest closing prices">
+  <div class="ticker-tape__track" id="tickerTapeTrack">
+    <span class="ticker-tape__item">Loading latest prices&hellip;</span>
+  </div>
+</div>
+
+<main>
+  <p class="eyebrow">Live tracker &middot; updates on trading days</p>
+  <h1>Semiconductor &amp; Console Stock Tracker</h1>
+  <p class="subhead">
+    Daily closing prices for five companies exposed to component supply
+    shocks &mdash; two upstream chipmakers and three downstream console
+    manufacturers &mdash; tracked automatically since this site went live,
+    with notable AI/semiconductor news tagged as it happens.
+  </p>
+
+  <section class="panel">
+    <h2>Price history</h2>
+    <div class="chart-wrap">
+      <canvas id="priceChart"></canvas>
+    </div>
+    <div class="legend" id="legend"></div>
+    <p class="status" id="chartStatus"></p>
+  </section>
+
+  <section class="panel">
+    <h2>Tagged events</h2>
+    <ul class="events-list" id="eventsList">
+      <li class="empty-state">Loading&hellip;</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  Data via Yahoo Finance (yfinance) &middot; fetched daily by GitHub Actions &middot;
+  <a href="https://github.com/arjunshivpatel/stock-shock-tracker">source on GitHub</a>
+</footer>
+
+<script>
+const TICKER_META = {
+  AMD:   { color: 'var(--c-amd)',   hex: '#E8734A', label: 'AMD' },
+  MSFT:  { color: 'var(--c-msft)',  hex: '#4FA8E0', label: 'MSFT' },
+  SONY:  { color: 'var(--c-sony)',  hex: '#6FCF97', label: 'SONY' },
+  NVDA:  { color: 'var(--c-nvda)',  hex: '#B98FE0', label: 'NVDA' },
+  NTDOY: { color: 'var(--c-ntdoy)', hex: '#E0577C', label: 'NTDOY' },
+};
+
+const eventMarkerPlugin = {
+  id: 'eventMarkers',
+  afterDraw(chart, args, opts) {
+    const events = opts.events || [];
+    if (!events.length) return;
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    ctx.save();
+    events.forEach(ev => {
+      const x = xScale.getPixelForValue(ev.date);
+      if (x < chartArea.left || x > chartArea.right) return;
+      ctx.strokeStyle = 'rgba(217, 164, 65, 0.55)';
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+};
+Chart.register(eventMarkerPlugin);
+
+let chart;
+const hiddenTickers = new Set();
+
+function buildTickerTape(dates, prices) {
+  const track = document.getElementById('tickerTapeTrack');
+  if (!dates.length) {
+    track.innerHTML = '<span class="ticker-tape__item">No data yet &mdash; check back after the first scheduled fetch.</span>';
+    return;
+  }
+  const lastIdx = dates.length - 1;
+  const prevIdx = Math.max(0, lastIdx - 1);
+
+  const items = Object.keys(TICKER_META).map(ticker => {
+    const series = prices[ticker] || [];
+    const last = series[lastIdx];
+    const prev = series[prevIdx];
+    if (last === undefined) return '';
+    let changeStr = '';
+    let dirClass = '';
+    if (prev !== undefined && prev !== 0) {
+      const pct = ((last - prev) / prev) * 100;
+      dirClass = pct >= 0 ? 'ticker-tape__up' : 'ticker-tape__down';
+      const arrow = pct >= 0 ? '\u25B2' : '\u25BC';
+      changeStr = `<span class="${dirClass}">${arrow} ${Math.abs(pct).toFixed(2)}%</span>`;
+    }
+    return `<span class="ticker-tape__item"><strong>${ticker}</strong>$${last.toFixed(2)} ${changeStr}</span>`;
+  }).join('');
+
+  // duplicate the sequence so the marquee loops seamlessly
+  track.innerHTML = items + items;
+}
+
+function buildLegend(onToggle) {
+  const legend = document.getElementById('legend');
+  legend.innerHTML = '';
+  Object.entries(TICKER_META).forEach(([ticker, meta]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.innerHTML = `<span class="legend__dot" style="background:${meta.hex}"></span>${meta.label}`;
+    btn.addEventListener('click', () => {
+      if (hiddenTickers.has(ticker)) {
+        hiddenTickers.delete(ticker);
+        btn.classList.remove('is-off');
+      } else {
+        hiddenTickers.add(ticker);
+        btn.classList.add('is-off');
+      }
+      onToggle();
+    });
+    legend.appendChild(btn);
+  });
+}
+
+function renderEvents(events) {
+  const list = document.getElementById('eventsList');
+  if (!events.length) {
+    list.innerHTML = '<li class="empty-state">No tagged events yet.</li>';
+    return;
+  }
+  const sorted = [...events].sort((a, b) => b.date.localeCompare(a.date));
+  list.innerHTML = sorted.map(ev => `
+    <li>
+      <time datetime="${ev.date}">${ev.date}</time>
+      <div class="headline">${ev.url ? `<a href="${ev.url}" target="_blank" rel="noopener">${ev.headline}</a>` : ev.headline}</div>
+      ${ev.note ? `<div class="note">${ev.note}</div>` : ''}
+    </li>
+  `).join('');
+}
+
+async function init() {
+  const status = document.getElementById('chartStatus');
+  try {
+    const [pricesRes, eventsRes] = await Promise.all([
+      fetch('data/prices.json'),
+      fetch('data/news_tags.json'),
+    ]);
+    const priceData = await pricesRes.json();
+    const events = await eventsRes.json();
+
+    buildTickerTape(priceData.dates, priceData.prices);
+    renderEvents(events);
+
+    if (!priceData.dates.length) {
+      status.textContent = 'No price history yet — the first scheduled fetch will populate this chart.';
+      document.getElementById('legend').style.display = 'none';
+      return;
+    }
+
+    const datasets = Object.entries(TICKER_META).map(([ticker, meta]) => ({
+      label: ticker,
+      data: priceData.prices[ticker],
+      borderColor: meta.hex,
+      backgroundColor: meta.hex,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.15,
+    }));
+
+    const eventPoints = events.map(ev => ({ date: ev.date }));
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: priceData.dates, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: {
+            type: 'category',
+            ticks: { color: '#8B909B', maxTicksLimit: 10, font: { family: 'JetBrains Mono', size: 10 } },
+            grid: { color: '#2E333D' },
+          },
+          y: {
+            ticks: { color: '#8B909B', font: { family: 'JetBrains Mono', size: 10 },
+              callback: v => `$${v}` },
+            grid: { color: '#2E333D' },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          eventMarkers: { events: eventPoints },
+          tooltip: {
+            backgroundColor: '#14161B',
+            titleFont: { family: 'JetBrains Mono' },
+            bodyFont: { family: 'JetBrains Mono' },
+            borderColor: '#2E333D',
+            borderWidth: 1,
+          },
+        },
+      },
+    });
+
+    buildLegend(() => {
+      chart.data.datasets.forEach(ds => {
+        ds.hidden = hiddenTickers.has(ds.label);
+      });
+      chart.update();
+    });
+
+    status.textContent = `${priceData.dates.length} trading day(s) tracked · latest: ${priceData.dates[priceData.dates.length - 1]}`;
+  } catch (err) {
+    status.textContent = 'Could not load price data. If you are viewing this locally, serve the folder with a local web server rather than opening the file directly (browsers block fetch() on file:// URLs).';
+    console.error(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
