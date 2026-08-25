@@ -6,7 +6,8 @@
 <title>Stock Shock Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+        onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
 <style>
   :root{
     --bg: #1B1E24;
@@ -413,8 +414,21 @@ async function init() {
 
     status.textContent = `${priceData.dates.length} trading day(s) tracked · latest: ${priceData.dates[priceData.dates.length - 1]}`;
   } catch (err) {
-    status.textContent = 'Could not load price data. If you are viewing this locally, serve the folder with a local web server rather than opening the file directly (browsers block fetch() on file:// URLs).';
-    console.error(err);
+    console.error('stock-shock-tracker: failed to render', err);
+    const wrap = document.querySelector('.chart-wrap');
+    const track = document.getElementById('tickerTapeTrack');
+    const list = document.getElementById('eventsList');
+    const msg = (typeof Chart === 'undefined')
+      ? 'Chart.js failed to load from the CDN (check your network, or an ad-blocker/extension may be blocking cdnjs.cloudflare.com).'
+      : 'Could not render the chart — see the browser console (F12) for details.';
+    wrap.innerHTML = `<p class="empty-state">${msg}</p>`;
+    if (track.textContent.includes('Loading')) {
+      track.innerHTML = '<span class="ticker-tape__item">Could not load price data — see console for details.</span>';
+    }
+    if (list.textContent.includes('Loading')) {
+      list.innerHTML = '<li class="empty-state">Could not load event data.</li>';
+    }
+    status.textContent = 'If you are viewing this locally by double-clicking index.html, that\'s the likely cause: serve the folder with a local web server instead, since browsers block fetch() on file:// URLs. On the live GitHub Pages URL, try a hard refresh (Ctrl+Shift+R) in case an old cached version is showing.';
   }
 }
 
