@@ -10,18 +10,18 @@
         onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
 <style>
   :root{
-    --bg: #1B1E24;
-    --panel: #22262E;
-    --panel-border: #2E333D;
-    --text: #EDEBE5;
+    --bg: #f9f4f2;
+    --panel: #4c5360;
+    --panel-border: #283247;
+    --text: #22262E;
     --text-muted: #8B909B;
     --amber: #D9A441;
 
-    --c-amd: #E8734A;
-    --c-msft: #4FA8E0;
-    --c-sony: #6FCF97;
-    --c-nvda: #B98FE0;
-    --c-ntdoy: #E0577C;
+    --c-amd: #ed1c24;
+    --c-msft: #0e7a0d;
+    --c-sony: #1e5ddb;
+    --c-nvda: #76b900;
+    --c-ntdoy: #e4000f;
   }
 
   *{ box-sizing: border-box; }
@@ -30,7 +30,7 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Times New Roman', serif;
   }
 
   a{ color: var(--amber); }
@@ -49,7 +49,7 @@
   }
   .ticker-tape__track{
     display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.85rem;
     animation: scroll-left 32s linear infinite;
   }
@@ -83,7 +83,7 @@
   }
 
   .eyebrow{
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -92,7 +92,7 @@
   }
 
   h1{
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: clamp(1.6rem, 4vw, 2.4rem);
     font-weight: 700;
     margin: 0 0 0.75rem;
@@ -115,7 +115,7 @@
   }
 
   .panel h2{
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.95rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -136,7 +136,7 @@
   }
 
   .legend button{
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.8rem;
     background: transparent;
     border: 1px solid var(--panel-border);
@@ -156,7 +156,7 @@
   }
 
   .status{
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.75rem;
     color: var(--text-muted);
   }
@@ -173,7 +173,7 @@
   .events-list li:last-child{ border-bottom: none; }
   .events-list time{
     display: block;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.75rem;
     color: var(--amber);
     margin-bottom: 0.25rem;
@@ -190,7 +190,7 @@
 
   .empty-state{
     color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Times New Roman', serif;
     font-size: 0.85rem;
     padding: 2rem 0;
     text-align: center;
@@ -239,11 +239,11 @@
 
 <script>
 const TICKER_META = {
-  AMD:   { color: 'var(--c-amd)',   hex: '#E8734A', label: 'AMD' },
-  MSFT:  { color: 'var(--c-msft)',  hex: '#4FA8E0', label: 'MSFT' },
-  SONY:  { color: 'var(--c-sony)',  hex: '#6FCF97', label: 'SONY' },
-  NVDA:  { color: 'var(--c-nvda)',  hex: '#B98FE0', label: 'NVDA' },
-  NTDOY: { color: 'var(--c-ntdoy)', hex: '#E0577C', label: 'NTDOY' },
+  AMD:   { color: 'var(--c-amd)',   hex: '#ed1c24', label: 'AMD' },
+  MSFT:  { color: 'var(--c-msft)',  hex: '#0e7a0d', label: 'MSFT' },
+  SONY:  { color: 'var(--c-sony)',  hex: '#1e5ddb', label: 'SONY' },
+  NVDA:  { color: 'var(--c-nvda)',  hex: '#76b900', label: 'NVDA' },
+  NTDOY: { color: 'var(--c-ntdoy)', hex: '#e4000f', label: 'NTDOY' },
 };
 
 const eventMarkerPlugin = {
