@@ -5,17 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stock Shock Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
         onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
 <style>
   :root{
-    --bg: #f9f4f2;
-    --panel: #4c5360;
-    --panel-border: #283247;
-    --text: #22262E;
-    --text-muted: #8B909B;
+    --bg: #F6FAFB;
+    --surface: #FFFFFF;
+    --surface-alt: #EAF4F5;
+    --border: #D7E7E9;
+    --text: #16232A;
+    --text-muted: #5C737A;
+    --aqua: #0E7C86;
+    --aqua-bright: #29A8B0;
     --amber: #D9A441;
+
+    --positive: #1F9D7C;
+    --negative: #D65F4C;
 
     --c-amd: #ed1c24;
     --c-msft: #0e7a0d;
@@ -30,26 +36,27 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Sans', sans-serif;
   }
 
-  a{ color: var(--amber); }
+  a{ color: var(--aqua); }
+  a:hover{ color: var(--aqua-bright); }
   a:focus-visible, button:focus-visible{
-    outline: 2px solid var(--amber);
+    outline: 2px solid var(--aqua-bright);
     outline-offset: 2px;
   }
 
   /* --- Ticker tape (signature element) --- */
   .ticker-tape{
-    background: #14161B;
-    border-bottom: 1px solid var(--panel-border);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
     overflow: hidden;
     white-space: nowrap;
     padding: 10px 0;
   }
   .ticker-tape__track{
     display: inline-block;
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.85rem;
     animation: scroll-left 32s linear infinite;
   }
@@ -60,11 +67,11 @@
   }
   .ticker-tape__item strong{
     color: var(--text);
-    font-weight: 700;
+    font-weight: 600;
     margin-right: 0.5em;
   }
-  .ticker-tape__up{ color: var(--c-sony); }
-  .ticker-tape__down{ color: var(--c-ntdoy); }
+  .ticker-tape__up{ color: var(--positive); }
+  .ticker-tape__down{ color: var(--negative); }
 
   @keyframes scroll-left{
     from{ transform: translateX(0); }
@@ -83,20 +90,21 @@
   }
 
   .eyebrow{
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--amber);
+    color: var(--aqua);
     margin: 0 0 0.6rem;
   }
 
   h1{
-    font-family: 'Times New Roman', serif;
+    font-family: 'Sora', sans-serif;
     font-size: clamp(1.6rem, 4vw, 2.4rem);
     font-weight: 700;
     margin: 0 0 0.75rem;
     letter-spacing: -0.01em;
+    color: var(--text);
   }
 
   .subhead{
@@ -107,19 +115,21 @@
   }
 
   .panel{
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 2rem;
+    box-shadow: 0 1px 2px rgba(22, 35, 42, 0.04);
   }
 
   .panel h2{
-    font-family: 'Times New Roman', serif;
-    font-size: 0.95rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--aqua);
     margin: 0 0 1.25rem;
   }
 
@@ -136,10 +146,10 @@
   }
 
   .legend button{
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.8rem;
-    background: transparent;
-    border: 1px solid var(--panel-border);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
     color: var(--text-muted);
     border-radius: 999px;
     padding: 0.4rem 0.9rem;
@@ -149,14 +159,14 @@
     gap: 0.5em;
     transition: border-color 0.15s ease, color 0.15s ease;
   }
-  .legend button:hover{ border-color: var(--text-muted); }
-  .legend button.is-off{ color: #565B65; }
+  .legend button:hover{ border-color: var(--aqua-bright); color: var(--text); }
+  .legend button.is-off{ color: #A7B4B8; background: transparent; }
   .legend__dot{
     width: 9px; height: 9px; border-radius: 50%; display: inline-block;
   }
 
   .status{
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.75rem;
     color: var(--text-muted);
   }
@@ -168,17 +178,17 @@
   }
   .events-list li{
     padding: 0.9rem 0;
-    border-bottom: 1px solid var(--panel-border);
+    border-bottom: 1px solid var(--border);
   }
   .events-list li:last-child{ border-bottom: none; }
   .events-list time{
     display: block;
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.75rem;
     color: var(--amber);
     margin-bottom: 0.25rem;
   }
-  .events-list .headline{ font-weight: 600; }
+  .events-list .headline{ font-family: 'Sora', sans-serif; font-weight: 600; color: var(--text); }
   .events-list .note{ color: var(--text-muted); font-size: 0.9rem; margin-top: 0.2rem; }
 
   footer{
@@ -190,7 +200,7 @@
 
   .empty-state{
     color: var(--text-muted);
-    font-family: 'Times New Roman', serif;
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.85rem;
     padding: 2rem 0;
     text-align: center;
@@ -239,11 +249,11 @@
 
 <script>
 const TICKER_META = {
-  AMD:   { color: 'var(--c-amd)',   hex: '#ed1c24', label: 'AMD' },
-  MSFT:  { color: 'var(--c-msft)',  hex: '#0e7a0d', label: 'MSFT' },
-  SONY:  { color: 'var(--c-sony)',  hex: '#1e5ddb', label: 'SONY' },
-  NVDA:  { color: 'var(--c-nvda)',  hex: '#76b900', label: 'NVDA' },
-  NTDOY: { color: 'var(--c-ntdoy)', hex: '#e4000f', label: 'NTDOY' },
+  AMD:   { hex: '#ed1c24', label: 'AMD' },
+  MSFT:  { hex: '#0e7a0d', label: 'MSFT' },
+  SONY:  { hex: '#1e5ddb', label: 'SONY' },
+  NVDA:  { hex: '#76b900', label: 'NVDA' },
+  NTDOY: { hex: '#e4000f', label: 'NTDOY' },
 };
 
 const eventMarkerPlugin = {
@@ -257,7 +267,7 @@ const eventMarkerPlugin = {
     events.forEach(ev => {
       const x = xScale.getPixelForValue(ev.date);
       if (x < chartArea.left || x > chartArea.right) return;
-      ctx.strokeStyle = 'rgba(217, 164, 65, 0.55)';
+      ctx.strokeStyle = 'rgba(217, 164, 65, 0.65)';
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -382,24 +392,27 @@ async function init() {
         scales: {
           x: {
             type: 'category',
-            ticks: { color: '#8B909B', maxTicksLimit: 10, font: { family: 'JetBrains Mono', size: 10 } },
-            grid: { color: '#2E333D' },
+            ticks: { color: '#5C737A', maxTicksLimit: 10, font: { family: 'IBM Plex Mono', size: 10 } },
+            grid: { color: '#E3EEF0' },
           },
           y: {
-            ticks: { color: '#8B909B', font: { family: 'JetBrains Mono', size: 10 },
+            ticks: { color: '#5C737A', font: { family: 'IBM Plex Mono', size: 10 },
               callback: v => `$${v}` },
-            grid: { color: '#2E333D' },
+            grid: { color: '#E3EEF0' },
           },
         },
         plugins: {
           legend: { display: false },
           eventMarkers: { events: eventPoints },
           tooltip: {
-            backgroundColor: '#14161B',
-            titleFont: { family: 'JetBrains Mono' },
-            bodyFont: { family: 'JetBrains Mono' },
-            borderColor: '#2E333D',
+            backgroundColor: '#FFFFFF',
+            titleColor: '#16232A',
+            bodyColor: '#16232A',
+            titleFont: { family: 'IBM Plex Mono' },
+            bodyFont: { family: 'IBM Plex Mono' },
+            borderColor: '#D7E7E9',
             borderWidth: 1,
+            padding: 10,
           },
         },
       },
